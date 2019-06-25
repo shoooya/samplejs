@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>GW javascript</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div id="message-box">Make your move!</div>
+        <div class="progress">
+            <div id="hp-bar" class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div id="total"> - </div>
+
+        <div>
+            <canvas id="screen" width="480" height="320"></canvas>
+        </div>
+
+        <div id="row">
+            <button id="add-damage" class="btn btn-danger">Damage</button>
+            <button id="add-heal" class="btn btn-success">Heal</button>
+        </div>
+    </div>
+
+
+<script>
+//画像に利用したサイトはこちら→https://pipoya.net/sozai/terms-of-use-of-free-materials/
+
+// ゲーム画面
+var canvas = document.getElementById("screen")
+var context = canvas.getContext('2d')
+
+// HPバー・攻撃ボタン
+var maxHealth = 500,
+curHealth = maxHealth;
+document.getElementById('total').innerText = `${maxHealth} / ${maxHealth}`
+document.getElementById('hp-bar').style.width = '100%'
+
+// 攻撃
+document.getElementById("add-damage").addEventListener('click', () => {
+    // ダメージ計算
+    let messageBox = document.getElementById('message-box')
+    if (curHealth == 0) {
+        messageBox.innerText = "Is this the end??"
+    } else {
+        var damage = Math.floor((Math.random() * 100) + 50);
+        curHealth = curHealth - damage;
+        if (curHealth < 0) {
+            curHealth = 0;
+        } else {
+            messageBox.innerText = `You took ${damage} points of damage!`
+        }
+        applyChange(curHealth);
+    }    
+})
+
+// 回復
+document.getElementById('add-heal').addEventListener('click', () => {
+    let messageBox = document.getElementById('message-box')
+    if (curHealth == maxHealth) {
+        messageBox.innerText = 'You are already at full health'
+    } else {
+        var heal = Math.floor((Math.random() * 100) + 5);
+        curHealth = curHealth + heal;
+        if (curHealth > maxHealth) {
+            curHealth = maxHealth;
+            messageBox.innerText = "You're at full health"
+        } else if (curHealth == 0) {
+            messageBox.innerText = `Miraculously! You regained your health by ${heal} points and get back on to your feet!`
+        } else {
+            messageBox.innerText = `You regained your health by ${heal}  points!`
+        }
+        applyChange(curHealth);
+    }
+})
+
+function applyChange(curHealth) {
+    var a = curHealth * (100 / maxHealth);
+    document.getElementById('hp-bar').style.width = `${a}%`
+    document.getElementById('total').innerText = `${curHealth} / ${maxHealth}`
+}
+
+// 主人公
+class Hero {
+    constructor(x, y, width, height) {
+        this.heroImg = new Image()
+        this.heroImg.src = 'images/hero.png'
+        this.heroImg.addEventListener('load', () => {
+            context.drawImage(this.heroImg, 0, 0, this.heroImg.width, this.heroImg.height, this.x, this.y, this.width, this.height)
+        })
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+
+        this.velocity = 2 // この速度で移動を繰り返す
+    }
+
+    defaultAnimation() {}
+
+    // オブジェクトを描画する。
+    render(context) {
+        context.beginPath()
+        context.drawImage(this.heroImg, 0, 0, this.heroImg.width, this.heroImg.height, this.x, this.y, this.width, this.height)
+        context.fill()
+    }
+}
+
+// 敵キャラオブジェクト
+class Enenmy {
+    constructor(x, y, width, height) {
+        this.enemyImg = new Image();
+        this.enemyImg.src = 'images/enemy.png';
+        this.enemyImg.addEventListener('load', () => {
+            context.drawImage(this.enemyImg, 0, 0, this.enemyImg.width, this.enemyImg.height, x, y, width, height)
+        })
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+
+        this.velocity = 0.5 // この速度で移動を繰り返す
+    }
+  
+    // オブジェクトの状態を更新する
+    defaultAnimation() {
+        // 高さが140より大きいか100より小さかったら移動方向を反転する。
+        if(this.y > 140 || this.y < 100) {
+            this.velocity = -this.velocity
+        }
+        this.y += this.velocity
+    }
+  
+    // オブジェクトを描画する。
+    render(context) {
+        context.beginPath()
+        context.drawImage(this.enemyImg, 0, 0, this.enemyImg.width, this.enemyImg.height, this.x, this.y, this.width, this.height)
+        context.fill()
+    }
+}
+
+// オブジェクトを管理する配列
+const objects = [];
+objects.push(new Enenmy(40, 110, 120, 100))
+objects.push(new Hero(350, 200, 100, 80))
+
+// アニメーションを継続させるメソッド
+function loop(timestamp) {
+  // 前の描画を消す。
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  // 各オブジェクトの状態を更新する。
+  objects.forEach((obj) => obj.defaultAnimation());
+  // 各オブジェクトを描画する。
+  objects.forEach((obj) => obj.render(context));  
+  // requestAnimationFrameを呼び出す。
+  window.requestAnimationFrame((ts) => loop(ts));
+}
+
+// アニメーション開始
+window.requestAnimationFrame((ts) => loop(ts));
+</script>
+
+<style>
+/* 背景はcssで設定 */
+canvas {
+    background-image: url("images/background.jpeg");
+    display: block;
+    margin: 0 auto;
+}
+
+#message-box {
+  text-align: center;
+  padding: 5px;
+}
+
+#row {
+    text-align: center;   
+}
+
+#total {
+    text-align: right;
+}
+
+#total,
+#message-box {
+  font-size: 16px;
+  margin: 5px;
+}
+</style>
+
+</body>
+</html>
