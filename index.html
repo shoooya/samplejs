@@ -6,10 +6,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <div class="container">
-        <div id="message-box">Make your move!</div>
+    <div id="display" class="container">
         <div class="progress">
-            <div id="hp-bar" class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            <div id="hp-bar" class="progress-bar bg-danger" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div id="total"> - </div>
 
@@ -23,6 +22,13 @@
         </div>
     </div>
 
+    <div id="terminal" class="container overflow-auto">
+        <div id="message-box">
+            バトルログ<br>
+            ---------------------------<br>
+        </div>
+    </div>
+</body>
 
 <script>
 //画像に利用したサイトはこちら→https://pipoya.net/sozai/terms-of-use-of-free-materials/
@@ -41,15 +47,20 @@ document.getElementById('hp-bar').style.width = '100%'
 document.getElementById("add-damage").addEventListener('click', () => {
     // ダメージ計算
     let messageBox = document.getElementById('message-box')
+    let terminal = document.getElementById('terminal')
     if (curHealth == 0) {
-        messageBox.innerText = "Is this the end??"
+        messageBox.innerText = messageBox.innerText + "敵はもう死んでいる・・・\n"
+        terminal.scrollTop = terminal.scrollHeight
     } else {
         var damage = Math.floor((Math.random() * 100) + 50);
         curHealth = curHealth - damage;
         if (curHealth < 0) {
             curHealth = 0;
+            messageBox.innerText = messageBox.innerText + "敵を倒した！！\n"
+            terminal.scrollTop = terminal.scrollHeight
         } else {
-            messageBox.innerText = `You took ${damage} points of damage!`
+            messageBox.innerText = messageBox.innerText + `あなたの攻撃： ${damage} のダメージを与えた\n`
+            terminal.scrollTop = terminal.scrollHeight
         }
         applyChange(curHealth);
     }    
@@ -59,17 +70,21 @@ document.getElementById("add-damage").addEventListener('click', () => {
 document.getElementById('add-heal').addEventListener('click', () => {
     let messageBox = document.getElementById('message-box')
     if (curHealth == maxHealth) {
-        messageBox.innerText = 'You are already at full health'
+        messageBox.innerText = messageBox.innerText + "すでに敵のHPは満タンだ\n"
+        terminal.scrollTop = terminal.scrollHeight
     } else {
         var heal = Math.floor((Math.random() * 100) + 5);
         curHealth = curHealth + heal;
         if (curHealth > maxHealth) {
             curHealth = maxHealth;
-            messageBox.innerText = "You're at full health"
+            messageBox.innerText = messageBox.innerText + "敵のHPが満タンになった\n"
+            terminal.scrollTop = terminal.scrollHeight
         } else if (curHealth == 0) {
-            messageBox.innerText = `Miraculously! You regained your health by ${heal} points and get back on to your feet!`
+            messageBox.innerText = messageBox.innerText + `あなたの回復： 敵のHPが ${heal} 回復し復活した\n`
+            terminal.scrollTop = terminal.scrollHeight
         } else {
-            messageBox.innerText = `You regained your health by ${heal}  points!`
+            messageBox.innerText = messageBox.innerText + `あなたの回復： 敵のHPが ${heal} 回復した\n`
+            terminal.scrollTop = terminal.scrollHeight
         }
         applyChange(curHealth);
     }
@@ -162,24 +177,37 @@ window.requestAnimationFrame((ts) => loop(ts));
 </script>
 
 <style>
-/* 背景はcssで設定 */
 canvas {
-    background-image: url("images/background.jpeg");
     display: block;
     margin: 0 auto;
 }
 
+#display {
+    background-image: url("images/background.jpeg");/* 背景はcssで設定 */
+    background-repeat: no-repeat;
+    width: 500px;
+    padding: 10px;
+}
+
+#terminal {
+    width: 500px;
+    height: 150px;
+    background-color: black
+}
+
 #message-box {
-  text-align: center;
+  text-align: left;
   padding: 5px;
+  color: white;
 }
 
 #row {
-    text-align: center;   
+    text-align: right;
 }
 
 #total {
     text-align: right;
+    color: white;
 }
 
 #total,
